@@ -154,7 +154,9 @@ def validate(rng: np.random.Generator) -> None:
 
 
 if __name__ == "__main__":
-    rng = np.random.default_rng(seed)
-    plot_sample_paths(rng)
-    validate(rng)
+    # Independent, reproducible streams: changing n_plot_paths cannot change the
+    # validation draws, and vice versa.
+    plot_seed, validation_seed = np.random.SeedSequence(seed).spawn(2)
+    plot_sample_paths(np.random.default_rng(plot_seed))
+    validate(np.random.default_rng(validation_seed))
     print(f"\nFigures written to {RESULTS.relative_to(ROOT)}/")

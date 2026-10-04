@@ -9,6 +9,12 @@ one equation of the model:
                           S_T  = Y
 
 Throughout, r = 0 so no discounting appears anywhere.
+
+Floating-point note: S_t is mathematically strictly inside (0, 1) for t < T, but
+once |logit(p0) + A_t| exceeds roughly 37 (towards 1) or 745 (towards 0), the
+float64 sigmoid returns exactly 1.0 or 0.0. Exact 0/1 prices before T are
+therefore numerical saturation, not early resolution of the contract; the
+model's resolution happens only at T, where S_T = Y is set explicitly.
 """
 
 from __future__ import annotations
@@ -67,12 +73,33 @@ def signal_to_price(
     scipy's expit is numerically stable: it never overflows for large |A_t| and
     saturates cleanly at 0.0 / 1.0, which is algebraically identical to
     p0 e^A / ((1-p0) + p0 e^A) but avoids computing e^A directly.
+
+    For strongly informative signals the result can saturate to exactly 0.0 or
+    1.0 in float64 (see module docstring); this is rounding, not resolution.
     """
-    _check_p0(p0)
+    check_model_parameters(p0, T, kappa)
     A_t = bayesian_exponent(t, xi, kappa, T)
     return expit(logit(p0) + A_t)
 
 
-def _check_p0(p0: float) -> None:
+def check_model_parameters(p0: float, T: float, kappa: float) -> None:
+    """Validate the model parameters: p0 in (0, 1), T > 0, kappa > 0, all finite.
+
+    p0 = 0 or 1 would make logit(p0) infinite (the event is already certain), and
+    kappa <= 0 would make the information signal uninformative or reversed.
+    """
+    for name, value in (("p0", p0), ("T", T), ("kappa", kappa)):
+        if not np.isfinite(value):
+            raise ValueError(f"{name} must be finite; got {value}.")
     if not 0.0 < p0 < 1.0:
         raise ValueError(f"p0 must lie strictly in (0, 1); got {p0}.")
+    if T <= 0.0:
+        raise ValueError(f"T must be positive; got {T}.")
+    if kappa <= 0.0:
+        raise ValueError(f"kappa must be positive; got {kappa}.")
+
+
+def check_positive_int(name: str, value: int) -> None:
+    """Validate a count such as n_steps or n_paths (a positive integer)."""
+    if isinstance(value, bool) or not isinstance(value, (int, np.integer)) or value < 1:
+        raise ValueError(f"{name} must be a positive integer; got {value!r}.")

@@ -109,3 +109,15 @@ def test_reproducible_with_same_seed():
     a = simulate_market_paths(P0, T, KAPPA, 50, 10, np.random.default_rng(7))
     b = simulate_market_paths(P0, T, KAPPA, 50, 10, np.random.default_rng(7))
     assert np.array_equal(a.prediction_price, b.prediction_price)
+
+
+@pytest.mark.parametrize("bad", [
+    dict(p0=0.0), dict(p0=1.0), dict(p0=-0.1), dict(p0=np.nan),
+    dict(T=0.0), dict(T=-1.0), dict(kappa=0.0), dict(kappa=-1.0), dict(kappa=np.inf),
+    dict(n_steps=0), dict(n_steps=2.5), dict(n_paths=0), dict(n_paths=True),
+])
+def test_invalid_simulation_inputs_raise(bad):
+    kwargs = dict(p0=P0, T=T, kappa=KAPPA, n_steps=10, n_paths=5, rng=np.random.default_rng(0))
+    kwargs.update(bad)
+    with pytest.raises(ValueError):
+        simulate_market_paths(**kwargs)

@@ -11,7 +11,12 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .information_model import information_signal, signal_to_price
+from .information_model import (
+    check_model_parameters,
+    check_positive_int,
+    information_signal,
+    signal_to_price,
+)
 
 
 @dataclass(frozen=True)
@@ -27,11 +32,17 @@ class MarketPaths:
 
 def time_grid(T: float, n_steps: int) -> np.ndarray:
     """Uniform grid 0 = t_0 < ... < t_n = T (last point is exactly T)."""
+    check_positive_int("n_steps", n_steps)
+    if not (np.isfinite(T) and T > 0):
+        raise ValueError(f"T must be positive and finite; got {T}.")
     return np.linspace(0.0, T, n_steps + 1)
 
 
 def simulate_terminal_outcome(p0: float, n_paths: int, rng: np.random.Generator) -> np.ndarray:
     """Y ~ Bernoulli(p0) under Q, since Q(Y=1) = S_0 = p0."""
+    check_positive_int("n_paths", n_paths)
+    if not 0.0 < p0 < 1.0:
+        raise ValueError(f"p0 must lie strictly in (0, 1); got {p0}.")
     return (rng.random(n_paths) < p0).astype(np.int8)
 
 
@@ -40,10 +51,17 @@ def simulate_brownian_bridge(
 ) -> np.ndarray:
     """beta_{tT} = W_t - (t/T) W_T on the grid, from a simulated Brownian motion W.
 
-    W is built from exact Gaussian increments, so the bridge is sampled exactly
-    (no discretisation error) at every grid point. beta_0 = 0 and beta_T = 0
-    hold exactly in floating point because time[-1] / T == 1.0.
+    No time-stepping approximation: W_t is a cumulative sum of independent
+    N(0, dt) increments, which is exactly Brownian motion at the grid points, so
+    the bridge values have exactly the right joint Gaussian law there (only
+    Monte Carlo sampling error remains). The grid controls which times we
+    observe, not the accuracy at those times. Between grid points nothing is
+    simulated; plots simply join the dots.
+
+    beta_0 = 0 and beta_T = 0 hold exactly in floating point because
+    time[0] = 0 and time[-1] / T == 1.0.
     """
+    check_positive_int("n_paths", n_paths)
     dt = np.diff(time)
     dW = rng.standard_normal((n_paths, dt.size)) * np.sqrt(dt)
     W = np.concatenate([np.zeros((n_paths, 1)), np.cumsum(dW, axis=1)], axis=1)
@@ -81,7 +99,13 @@ def simulate_market_paths(
 
     Order of operations mirrors the model: draw Y, draw independent bridge noise,
     form the information signal, then map information to price.
+
+    Because S_t is a deterministic function of xi_t at the same time t, and xi_t
+    is exact at grid points, the simulated prices carry no discretisation bias.
     """
+    check_model_parameters(p0, T, kappa)
+    check_positive_int("n_steps", n_steps)
+    check_positive_int("n_paths", n_paths)
     time = time_grid(T, n_steps)
     Y = simulate_terminal_outcome(p0, n_paths, rng)
     beta = simulate_brownian_bridge(time, n_paths, rng)

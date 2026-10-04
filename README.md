@@ -12,14 +12,18 @@ Pricing European options whose underlying is a binary prediction-market contract
 | Information | `ξ_t = κ t Y + β_tT` | `information_model.information_signal` |
 | Bayes exponent | `A_t = κT ξ_t/(T−t) − κ² t T / (2(T−t))`, `t < T` | `information_model.bayesian_exponent` |
 | Price | `logit S_t = logit p0 + A_t`; `S_T = Y` | `information_model.signal_to_price`, `simulation.prices_from_signal` |
+| Call price | `C_0 = E^Q[max(S_{T_option} − K, 0)]` by Monte Carlo | `option_pricing.price_european_call_mc` |
+| Benchmark | `C_0 = p0 (1−K) Φ(d1) − (1−p0) K Φ(d0)` (see `src/benchmark.py`) | `benchmark.call_price_closed_form`, `benchmark.call_price_quadrature` |
 
 ## Layout
 
 ```
 src/information_model.py   pure model equations (no randomness)
 src/simulation.py          path simulation driven by one np.random.Generator
+src/option_pricing.py      MC call pricer (bridge sampled directly at T_option), s.e., CI, convergence
+src/benchmark.py           independent closed-form + quadrature prices (imports nothing from src/)
 experiments/               scripts that produce figures/tables in results/
-tests/test_model.py        pathwise and distributional checks
+tests/                     model checks, MC-vs-benchmark, convergence, input validation
 ```
 
 ## Running
@@ -28,4 +32,5 @@ tests/test_model.py        pathwise and distributional checks
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m pytest -q tests
 .venv/bin/python experiments/01_paths_and_validation.py
+.venv/bin/python experiments/02_option_pricing.py
 ```
