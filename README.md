@@ -23,6 +23,7 @@ src/simulation.py          path simulation driven by one np.random.Generator
 src/option_pricing.py      MC call pricer (bridge sampled directly at T_option), s.e., CI, convergence
 src/benchmark.py           independent closed-form + quadrature prices (imports nothing from src/)
 src/sensitivity.py         comparative statics: closed-form grids, MC overlay points, information ratio s
+src/expiry_distribution.py exact CDF / density / quantiles / moments of S_{T_option} (imports nothing from src/)
 experiments/               scripts that produce figures/tables in results/
 tests/                     model checks, MC-vs-benchmark, convergence, input validation
 ```
@@ -35,4 +36,5 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python experiments/01_paths_and_validation.py
 .venv/bin/python experiments/02_option_pricing.py
 .venv/bin/python experiments/03_sensitivity.py
+.venv/bin/python experiments/04_distributions.py
 ```

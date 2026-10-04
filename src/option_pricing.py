@@ -56,20 +56,23 @@ def check_option_parameters(T: float, T_option: float, K: float) -> None:
         raise ValueError(f"K must be finite; got {K}.")
 
 
-def simulate_price_at_option_expiry(
+def simulate_outcome_and_price_at_option_expiry(
     p0: float,
     T: float,
     T_option: float,
     kappa: float,
     n_simulations: int,
     rng: np.random.Generator,
-) -> np.ndarray:
-    """Draw n_simulations independent samples of S_{T_option} under Q.
+) -> tuple[np.ndarray, np.ndarray]:
+    """Draw n_simulations independent pairs (Y, S_{T_option}) under Q.
 
     1. Y ~ Bernoulli(p0)
     2. beta_{T_option,T} ~ N(0, T_option (T - T_option) / T), independent of Y
     3. xi_{T_option} = kappa T_option Y + beta_{T_option,T}
     4. S_{T_option} from the same Bayesian price formula as the path simulation
+
+    Y is returned only so results can be analysed by outcome after the fact;
+    the price S_{T_option} itself is computed from xi alone, never from Y.
     """
     check_model_parameters(p0, T, kappa)
     check_positive_int("n_simulations", n_simulations)
@@ -79,7 +82,20 @@ def simulate_price_at_option_expiry(
     beta_sd = np.sqrt(brownian_bridge_variance(T_option, T))
     beta = beta_sd * rng.standard_normal(n_simulations)
     xi = information_signal(T_option, Y, beta, kappa)
-    return signal_to_price(T_option, xi, p0, kappa, T)
+    return Y, signal_to_price(T_option, xi, p0, kappa, T)
+
+
+def simulate_price_at_option_expiry(
+    p0: float,
+    T: float,
+    T_option: float,
+    kappa: float,
+    n_simulations: int,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Draw n_simulations independent samples of S_{T_option} under Q (see above)."""
+    _, S = simulate_outcome_and_price_at_option_expiry(p0, T, T_option, kappa, n_simulations, rng)
+    return S
 
 
 def call_payoff(S: np.ndarray, K: float) -> np.ndarray:

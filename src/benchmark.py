@@ -101,3 +101,22 @@ def call_price_quadrature(p0: float, T: float, T_option: float, K: float, kappa:
         return value
 
     return p0 * conditional_expectation(kappa * t) + (1.0 - p0) * conditional_expectation(0.0)
+
+
+def exercise_probabilities(
+    p0: float, T: float, T_option: float, K: float, kappa: float
+) -> dict[str, float]:
+    """Normal-threshold exercise probabilities behind the closed form (0 < K < 1).
+
+        Q(S > K | Y=1) = Phi(d1),   Q(S > K | Y=0) = Phi(d0),
+        Q(S > K)       = p0 Phi(d1) + (1 - p0) Phi(d0).
+    """
+    _validate(p0, T, T_option, K, kappa)
+    if not 0.0 < K < 1.0:
+        raise ValueError(f"exercise_probabilities requires 0 < K < 1; got {K}.")
+    t = T_option
+    sigma = np.sqrt(t * (T - t) / T)
+    xi_star = exercise_threshold(p0, T, T_option, K, kappa)
+    prob_yes = float(norm.cdf((kappa * t - xi_star) / sigma))
+    prob_no = float(norm.cdf(-xi_star / sigma))
+    return {"given_yes": prob_yes, "given_no": prob_no, "total": p0 * prob_yes + (1 - p0) * prob_no}
