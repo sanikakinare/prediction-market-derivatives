@@ -105,6 +105,23 @@ def to_unix(iso_timestamp: str) -> int:
     return int(datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00")).timestamp())
 
 
+def target_day_midnight_et(close_time: str) -> pd.Timestamp:
+    """00:00 America/New_York on a KXHIGHNY event's target day.
+
+    Trading closes at 05:00 UTC after the target day, i.e. 00:00 EST or 01:00 EDT
+    (midnight local standard time), so stepping back two hours from the close in
+    ET always lands on the target day, in or out of daylight saving time.
+    """
+    close_et = pd.Timestamp(close_time).tz_convert("America/New_York")
+    return (close_et - pd.Timedelta(hours=2)).normalize()
+
+
+def normalized_time_of_clock(open_time: str, close_time: str, hours_after_target_midnight: float) -> float:
+    """Normalized market time u of a wall-clock time (ET) on the target day."""
+    t = target_day_midnight_et(close_time).timestamp() + 3600.0 * hours_after_target_midnight
+    return (t - to_unix(open_time)) / (to_unix(close_time) - to_unix(open_time))
+
+
 def parse_outcome(result: str) -> int:
     """Kalshi settlement result -> Y. Only 'yes'/'no' are valid binary outcomes."""
     mapping = {"yes": 1, "no": 0}

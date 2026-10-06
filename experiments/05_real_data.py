@@ -44,7 +44,7 @@ from src.empirical_analysis import (  # noqa: E402
     path_statistics,
     price_by_outcome,
 )
-from src.kalshi_data import build_dataset, to_unix  # noqa: E402
+from src.kalshi_data import build_dataset, target_day_midnight_et, to_unix  # noqa: E402
 
 SERIES = "KXHIGHNY"
 N_EVENTS = 40
@@ -78,20 +78,6 @@ plt.rcParams.update({
     "lines.linewidth": 1.6,
     "legend.frameon": False,
 })
-
-
-ET = "America/New_York"
-
-
-def target_day_midnight_et(close_time: str) -> pd.Timestamp:
-    """00:00 America/New_York on the event's target day.
-
-    Trading closes at 05:00 UTC after the target day, i.e. 00:00 EST or 01:00 EDT
-    (midnight local standard time), so stepping back two hours from the close in
-    ET always lands on the target day, in or out of daylight saving time.
-    """
-    close_et = pd.Timestamp(close_time).tz_convert(ET)
-    return (close_et - pd.Timedelta(hours=2)).normalize()
 
 
 def hours_after_target_midnight_et(row: pd.Series, u: float) -> float:

@@ -26,6 +26,8 @@ src/sensitivity.py         comparative statics: closed-form grids, MC overlay po
 src/expiry_distribution.py exact CDF / density / quantiles / moments of S_{T_option} (imports nothing from src/)
 src/kalshi_data.py         Kalshi public API download (cached), cleaning, normalized time
 src/empirical_analysis.py  |Y - S_t| by time bin, prices by outcome, jump / learning-time statistics
+src/information_clock.py   calendar -> information time; coherent route for timing refinements
+src/calibration.py         train/test split, T_effective, E|Y - S| profiles, kappa fit, goodness of fit
 data/raw/                  raw Kalshi API responses (events, hourly candles)
 data/processed/            cleaned long-format price data
 experiments/               scripts that produce figures/tables in results/
@@ -42,4 +44,5 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python experiments/03_sensitivity.py
 .venv/bin/python experiments/04_distributions.py
 .venv/bin/python experiments/05_real_data.py   # downloads Kalshi data on first run, then uses data/raw
+.venv/bin/python experiments/06_calibration.py # ~2.5 min (parametric bootstrap)
 ```

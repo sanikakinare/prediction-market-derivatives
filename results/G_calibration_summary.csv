@@ -1,0 +1,17 @@
+metric,value
+n_train_markets,30
+n_test_markets,10
+u_effective,0.7692307692307693
+T_effective_clock,target day 16:00 ET
+kappa_constant_T_effective,0.47937980647809664
+train_rmse_T_effective,0.026553108388455444
+test_rmse_T_effective,0.03069691652416719
+kappa_constant_formal_close,1.1955724598476019
+train_rmse_formal_close,0.049926266833209616
+test_rmse_formal_close,0.05278429650094745
+gof_bootstrap_q95_train_rmse,0.02847331923666015
+gof_p_value,0.09
+refinement_selected,False
+test_noise_rmse_median,0.03389169511663369
+illustrative_premium_calibrated,0.022845548787754105
+illustrative_premium_synthetic,0.11591498260272057
