@@ -24,6 +24,10 @@ src/option_pricing.py      MC call pricer (bridge sampled directly at T_option),
 src/benchmark.py           independent closed-form + quadrature prices (imports nothing from src/)
 src/sensitivity.py         comparative statics: closed-form grids, MC overlay points, information ratio s
 src/expiry_distribution.py exact CDF / density / quantiles / moments of S_{T_option} (imports nothing from src/)
+src/kalshi_data.py         Kalshi public API download (cached), cleaning, normalized time
+src/empirical_analysis.py  |Y - S_t| by time bin, prices by outcome, jump / learning-time statistics
+data/raw/                  raw Kalshi API responses (events, hourly candles)
+data/processed/            cleaned long-format price data
 experiments/               scripts that produce figures/tables in results/
 tests/                     model checks, MC-vs-benchmark, convergence, input validation
 ```
@@ -37,4 +41,5 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python experiments/02_option_pricing.py
 .venv/bin/python experiments/03_sensitivity.py
 .venv/bin/python experiments/04_distributions.py
+.venv/bin/python experiments/05_real_data.py   # downloads Kalshi data on first run, then uses data/raw
 ```
